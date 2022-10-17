@@ -14,8 +14,8 @@ DBG_PATH := debug
 
 # compile macros
 TARGET_NAME := db
-ifeq ($(OS), Windows_NT)
-	TARGET_NAME := $(addsuffix .exe, $(TARGET_NAME))
+ifeq ($(OS),Windows_NT)
+	TARGET_NAME := $(addsuffix .exe,$(TARGET_NAME))
 endif
 TARGET := $(BIN_PATH)/$(TARGET_NAME)
 TARGET_DEBUG := $(DBG_PATH)/$(TARGET_NAME)
@@ -26,15 +26,18 @@ OBJ := $(addprefix $(OBJ_PATH)/, $(addsuffix .o, $(notdir $(basename $(SRC)))))
 OBJ_DEBUG := $(addprefix $(DBG_PATH)/, $(addsuffix .o, $(notdir $(basename $(SRC)))))
 
 # clean files list
-DISTCLEAN_LIST := $(OBJ) $(OBJ_DEBUG)
-CLEAN_LIST := $(TARGET) $(TARGET_DEBUG) $(DISTCLEAN_LIST)
+DISTCLEAN_LIST := $(OBJ) \
+				$(OBJ_DEBUG)
+CLEAN_LIST := $(TARGET) \
+				$(TARGET_DEBUG) \
+				$(DISTCLEAN_LIST)
 
 #default rule
 default: makedir all
 
 #non-phony targets
 $(TARGET): $(OBJ)
-	$(CC) $(COBJFLAGS) -o $@ $<
+	$(CC) -o $@ $(OBJ) $(CFLAGS)
 
 $(OBJ_PATH)/%.o: $(SRC_PATH)/%.c*
 	$(CC) $(COBJFLAGS) -o $@ $<
