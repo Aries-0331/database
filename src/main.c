@@ -187,25 +187,6 @@ Pager* pager_open(const char* filename) {
     return pager;
 }
 
-Table* db_open(const char* filename) {
-    Pager* pager = pager_open(filename);
-    uint32_t num_rows = pager->file_length / ROW_SIZE;
-
-    Table* table = (Table*)malloc(sizeof(Table));
-    table->pager = pager;
-    table->num_rows = num_rows;
-
-    return table;
-}
-
-void free_table(Table* table) {
-    for (uint32_t i = 0; i < TABLE_MAX_PAGES; i++)
-    {
-        free(table->pages[i]);
-    }
-    free(table);
-}
-
 void pager_flush(Pager* pager, uint32_t page_num, uint32_t size) {
     if (pager->pages[page_num] == NULL) {
         printf("Tried to flush null page.\n");
@@ -227,16 +208,27 @@ void pager_flush(Pager* pager, uint32_t page_num, uint32_t size) {
     }
 }
 
+Table* db_open(const char* filename) {
+    Pager* pager = pager_open(filename);
+    uint32_t num_rows = pager->file_length / ROW_SIZE;
+
+    Table* table = (Table*)malloc(sizeof(Table));
+    table->pager = pager;
+    table->num_rows = num_rows;
+
+    return table;
+}
+
 void db_close(Table* table) {
     Pager* pager = table->pager;
     uint32_t num_full_pages = table->num_rows / ROWS_PER_PAGE;
 
     for (uint32_t i = 0; i < num_full_pages; i++) {
-        if (pager->pages[i == NULL]) {
+        if (pager->pages[i] == NULL) {
             continue;
         }
         pager_flush(pager, i, PAGE_SIZE);
-        free(pager->page[i]);
+        free(pager->pages[i]);
         pager->pages[i] = NULL;
     }
 
@@ -309,7 +301,7 @@ PrepareResult prepare_insert(InputBuffer* input_buffer, Statement* statement) {
 PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* statement) {
     if (strncmp(input_buffer->buffer, "insert", 6) == 0)
     {
-        prepare_insert(input_buffer, statement);
+        return prepare_insert(input_buffer, statement);
     }
     if (strcmp(input_buffer->buffer, "select") == 0)
     {
